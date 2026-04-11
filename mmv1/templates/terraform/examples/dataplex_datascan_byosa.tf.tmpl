@@ -1,0 +1,75 @@
+resource "google_service_account" "sa" {
+  account_id   = "datascan-sa"
+  display_name = "DataScan Service Account"
+  project      = "{{index $.TestEnvVars "project_name"}}"
+}
+
+resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
+  location     = "us-central1"
+  data_scan_id = "{{index $.Vars "datascan_name"}}"
+
+  data {
+    resource = "//bigquery.googleapis.com/projects/bigquery-public-data/datasets/samples/tables/shakespeare"
+  }
+
+  execution_spec {
+    trigger {
+      on_demand {}
+    }
+  }
+
+  execution_identity {
+    # Specify the identity to run the datascan.
+    # Exactly one of service_account, user_credential, or dataplex_service_agent must be specified.
+
+    service_account {
+      email = google_service_account.sa.email
+    }
+
+    # user_credential {}
+
+    # dataplex_service_agent {}
+  }
+
+  data_profile_spec {}
+
+  project = "{{index $.TestEnvVars "project_name"}}"
+
+  depends_on = [
+    google_service_account.sa,
+  ]
+}
+resource "google_service_account" "sa" {
+  account_id   = "datascan-sa"
+  display_name = "DataScan Service Account"
+  project      = "{{index $.TestEnvVars "project_name"}}"
+}
+
+resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
+  location     = "us-central1"
+  data_scan_id = "{{index $.Vars "datascan_name"}}"
+
+  data {
+    resource = "//bigquery.googleapis.com/projects/bigquery-public-data/datasets/samples/tables/shakespeare"
+  }
+
+  execution_spec {
+    trigger {
+      on_demand {}
+    }
+  }
+
+  execution_identity {
+    service_account {
+      email = google_service_account.sa.email
+    }
+  }
+
+  data_profile_spec {}
+
+  project = "{{index $.TestEnvVars "project_name"}}"
+
+  depends_on = [
+    google_service_account.sa,
+  ]
+}

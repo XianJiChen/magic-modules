@@ -150,6 +150,13 @@ examples:
     test_env_vars:
       project_name: 'PROJECT_NAME'
       location: 'REGION'
+  - name: "dataplex_datascan_byosa"
+    primary_resource_id: "byosa"
+    vars:
+      datascan_name: "datascan-byosa"
+    test_env_vars:
+      project_name: "PROJECT_NAME"
+    exclude_test: true
 parameters:
   - name: 'location'
     type: String
@@ -302,13 +309,59 @@ properties:
       - name: 'latestJobEndTime'
         type: String
         description: |
-          The time when the latest DataScanJob started.
+          The time when the latest DataScanJob ended.
         output: true
       - name: 'latestJobStartTime'
         type: String
         description: |
-          The time when the latest DataScanJob ended.
+          The time when the latest DataScanJob started.
         output: true
+      - name: 'latestJobCreateTime'
+        type: String
+        description: |
+          The time when the latest DataScanJob was created.
+        output: true
+  - name: 'executionIdentity'
+    type: NestedObject
+    description: |
+      The identity to run the datascan. If not specified, defaults to the Dataplex Service Agent.
+    properties:
+      - name: 'dataplexServiceAgent'
+        type: NestedObject
+        description: |
+          The Dataplex service agent associated with the user's project.
+        allow_empty_object: true
+        send_empty_value: true
+        exactly_one_of:
+          - 'execution_identity.0.dataplex_service_agent'
+          - 'execution_identity.0.user_credential'
+          - 'execution_identity.0.service_account'
+        properties: []
+      - name: 'userCredential'
+        type: NestedObject
+        description: |
+          The credential of the calling user. Supports only ONE_TIME trigger type.
+        allow_empty_object: true
+        send_empty_value: true
+        exactly_one_of:
+          - 'execution_identity.0.dataplex_service_agent'
+          - 'execution_identity.0.user_credential'
+          - 'execution_identity.0.service_account'
+        properties: []
+      - name: 'serviceAccount'
+        type: NestedObject
+        description: |
+          Service account to use to execute a datascan.
+        exactly_one_of:
+          - 'execution_identity.0.dataplex_service_agent'
+          - 'execution_identity.0.user_credential'
+          - 'execution_identity.0.service_account'
+        properties:
+          - name: 'email'
+            type: String
+            description: |
+              Service account email.
+            required: true
   - name: 'type'
     type: Enum
     description: |
