@@ -24,6 +24,7 @@ resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
     sampling_percent = 5
     row_filter = "station_id > 1000"
     catalog_publishing_enabled = true
+    filter = "attributes.priority = 'high'"
     post_scan_actions {
       notification_report {
         recipients {
@@ -39,6 +40,9 @@ resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
       column = "address"
       dimension = "VALIDITY"
       threshold = 0.99
+      attributes = {
+        priority = "high"
+      }
       non_null_expectation {}
     }
 
@@ -111,6 +115,18 @@ resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
       dimension = "VALIDITY"
       sql_assertion {
         sql_statement = "select * from bigquery-public-data.austin_bikeshare.bikeshare_stations where station_id is null"
+      }
+    }
+
+    rules {
+      column = "address"
+      dimension = "VALIDITY"
+      template_reference {
+        name = "projects/{{index $.TestEnvVars "project_name"}}/locations/us-central1/entryGroups/my-entry-group/entries/my-entry"
+        values {
+          name = "min_length"
+          value = "10"
+        }
       }
     }
   }

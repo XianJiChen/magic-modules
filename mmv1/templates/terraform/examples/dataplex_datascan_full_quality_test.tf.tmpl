@@ -1,3 +1,36 @@
+resource "google_dataplex_entry_group" "test_group" {
+  location       = "us-central1"
+  entry_group_id = "test-group-%{random_suffix}"
+  project        = "{{index $.TestEnvVars "project_name"}}"
+}
+
+resource "google_dataplex_entry_type" "test_type" {
+  location      = "us-central1"
+  entry_type_id = "test-type-%{random_suffix}"
+  project       = "{{index $.TestEnvVars "project_name"}}"
+}
+
+resource "google_dataplex_entry" "test_entry" {
+  location       = "us-central1"
+  entry_group_id = google_dataplex_entry_group.test_group.entry_group_id
+  entry_id       = "test-entry-%{random_suffix}"
+  entry_type     = google_dataplex_entry_type.test_type.name
+  project        = "{{index $.TestEnvVars "project_number"}}"
+  aspects {
+    aspect_key = "{{index $.TestEnvVars "project_number"}}.us-central1.data-quality-rule-template"
+    aspect {
+      data = jsonencode({
+        dimension = "VALIDITY"
+        sqlCollection = [
+          {
+            query = "SELECT * FROM $${data()} WHERE $${column()} IS NOT NULL"
+          }
+        ]
+      })
+    }
+  }
+}
+
 resource "google_bigquery_dataset" "tf_test_dataset" {
   dataset_id = "tf_test_dataset_id_%{random_suffix}"
   default_table_expiration_ms = 3600000
@@ -86,6 +119,7 @@ resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
     sampling_percent = 5
     row_filter = "station_id > 1000"
     catalog_publishing_enabled = true
+    filter = "attributes.priority = 'high'"
     post_scan_actions {
       notification_report {
         recipients {
@@ -101,6 +135,9 @@ resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
       column = "address"
       dimension = "VALIDITY"
       threshold = 0.99
+      attributes = {
+        priority = "high"
+      }
       non_null_expectation {}
     }
 
@@ -173,6 +210,18 @@ resource "google_dataplex_datascan" "{{$.PrimaryResourceId}}" {
       dimension = "VALIDITY"
       sql_assertion {
         sql_statement = "select * from $${data()} where address is null"
+      }
+    }
+
+    rules {
+      column = "address"
+      dimension = "VALIDITY"
+      template_reference {
+        name = google_dataplex_entry.test_entry.name
+        values {
+          name = "min_length"
+          value = "10"
+        }
       }
     }
   }
