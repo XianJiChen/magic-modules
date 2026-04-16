@@ -4,20 +4,14 @@ resource "google_dataplex_entry_group" "test_group" {
   project        = "{{index $.TestEnvVars "project_name"}}"
 }
 
-resource "google_dataplex_entry_type" "test_type" {
-  location      = "us-central1"
-  entry_type_id = "test-type-%{random_suffix}"
-  project       = "{{index $.TestEnvVars "project_name"}}"
-}
-
 resource "google_dataplex_entry" "test_entry" {
   location       = "us-central1"
   entry_group_id = google_dataplex_entry_group.test_group.entry_group_id
   entry_id       = "test-entry-%{random_suffix}"
-  entry_type     = google_dataplex_entry_type.test_type.name
+  entry_type     = "projects/655216118709/locations/global/entryTypes/data-quality-rule-template"
   project        = "{{index $.TestEnvVars "project_number"}}"
   aspects {
-    aspect_key = "{{index $.TestEnvVars "project_number"}}.us-central1.data-quality-rule-template"
+    aspect_key = "655216118709.global.data-quality-rule-template"
     aspect {
       data = jsonencode({
         dimension = "VALIDITY"
@@ -34,6 +28,7 @@ resource "google_dataplex_entry" "test_entry" {
 resource "google_bigquery_dataset" "tf_test_dataset" {
   dataset_id = "tf_test_dataset_id_%{random_suffix}"
   default_table_expiration_ms = 3600000
+  location   = "us-central1"
 }
 
 resource "google_bigquery_table" "tf_test_table" {

@@ -178,6 +178,7 @@ examples:
     test_env_vars:
       project_name: 'PROJECT_NAME'
       project_number: 'PROJECT_NUMBER'
+    external_providers: ["time"]
 parameters:
   - name: 'location'
     type: String
